@@ -1,1 +1,1 @@
-# vs-code
+# vs-code专用仓库
