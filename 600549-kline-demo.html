@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厦门钨业(600549) - 真实K线图</title>
+    <style>
+        body { background: #181c2a; color: #e0e0e0; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        h1 { color: #00d4ff; text-align: center; margin-bottom: 8px; }
+        .controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        button { background: #00d4ff; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0099ff; }
+        button.active, .controls button:active { background: #00ff88; color: #222; }
+        .chart-container { background: #222b44; border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid #2a3550; height: 600px; }
+        #chart { width: 100%; height: 100%; }
+        .info { text-align: center; margin-bottom: 16px; background: rgba(0, 212, 255, 0.1); padding: 12px; border-radius: 8px; }
+        .info span { margin: 0 12px; font-size: 1.1rem; }
+        .data-source { text-align: center; color: #888; font-size: 0.9rem; margin-top: 20px; }
+        @media (max-width: 768px) { .container { padding: 8px; } .chart-container { height: 350px; } .info span { display: block; margin: 4px 0; } }
+    </style>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>📈 厦门钨业(600549) - 真实K线图</h1>
+    <div class="info">
+        <span id="latest-date">日期: 加载中...</span>
+        <span>开盘: <b id="open">--</b></span>
+        <span>收盘: <b id="close">--</b></span>
+        <span>最高: <b id="high">--</b></span>
+        <span>最低: <b id="low">--</b></span>
+        <span>成交量: <b id="volume">--</b></span>
+    </div>
+    <div class="controls">
+        <button id="candleBtn" class="active">📊 K线图</button>
+        <button id="lineBtn">📈 折线图</button>
+        <button id="areaBtn">📉 面积图</button>
+        <button id="volumeBtn" class="active">📊 成交量</button>
+    </div>
+    <div class="controls">
+        <button class="timeframe-btn active" data-timeframe="1Y">1年</button>
+        <button class="timeframe-btn" data-timeframe="6M">6月</button>
+        <button class="timeframe-btn" data-timeframe="3M">3月</button>
+        <button class="timeframe-btn" data-timeframe="1M">1月</button>
+    </div>
+    <div class="chart-container">
+        <div id="chart"></div>
+    </div>
+    <div class="data-source">
+        数据来源: akshare-one-mcp (真实股票数据) | 更新时间: <span id="update-time"></span>
+    </div>
+</div>
+
+<script>
+// 更新时间
+document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+
+// 真实股票数据（600549 厦门钨业从2025年1月开始）
+const realStockData = [
+    {"timestamp":1761667200000,"open":35.15,"high":37.84,"low":35.15,"close":37.51,"volume":1047940},
+    {"timestamp":1761753600000,"open":37.51,"high":37.66,"low":36.55,"close":36.55,"volume":768879},
+    {"timestamp":1761840000000,"open":36.56,"high":37.11,"low":35.54,"close":35.7,"volume":601666},
+    {"timestamp":1762099200000,"open":35.97,"high":36.39,"low":34.69,"close":35.69,"volume":505427},
+    {"timestamp":1762185600000,"open":35.5,"high":35.75,"low":34.52,"close":34.8,"volume":430301},
+    {"timestamp":1762272000000,"open":33.97,"high":35.77,"low":33.89,"close":35.49,"volume":525552},
+    {"timestamp":1762358400000,"open":35.6,"high":36.23,"low":35.1,"close":35.41,"volume":445042},
+    {"timestamp":1762444800000,"open":35.1,"high":35.45,"low":34.67,"close":34.91,"volume":335038},
+    {"timestamp":1762704000000,"open":35.1,"high":35.26,"low":33.79,"close":34.25,"volume":426670},
+    {"timestamp":1762790400000,"open":34.47,"high":34.91,"low":33.97,"close":34.28,"volume":434449},
+    {"timestamp":1762876800000,"open":34.0,"high":34.55,"low":33.73,"close":33.87,"volume":342772},
+    {"timestamp":1762963200000,"open":34.0,"high":35.31,"low":34.0,"close":34.57,"volume":564381},
+    {"timestamp":1763049600000,"open":34.15,"high":34.9,"low":33.33,"close":34.0,"volume":374933},
+    {"timestamp":1763308800000,"open":34.0,"high":34.55,"low":33.6,"close":33.96,"volume":311609},
+    {"timestamp":1763395200000,"open":34.01,"high":35.18,"low":33.34,"close":33.73,"volume":526522},
+    {"timestamp":1763481600000,"open":33.51,"high":34.32,"low":32.9,"close":33.72,"volume":377845},
+    {"timestamp":1763568000000,"open":33.69,"high":34.42,"low":33.39,"close":33.69,"volume":351055},
+    {"timestamp":1763654400000,"open":33.02,"high":33.05,"low":31.73,"close":31.75,"volume":439865},
+    {"timestamp":1763913600000,"open":31.88,"high":32.67,"low":31.55,"close":32.42,"volume":329639},
+    {"timestamp":1764000000000,"open":32.83,"high":32.93,"low":32.35,"close":32.58,"volume":236270},
+    {"timestamp":1764086400000,"open":32.78,"high":33.26,"low":32.5,"close":32.74,"volume":230009},
+    {"timestamp":1764172800000,"open":33.0,"high":33.4,"low":32.47,"close":32.55,"volume":249509},
+    {"timestamp":1764259200000,"open":32.4,"high":34.76,"low":32.28,"close":34.4,"volume":519687},
+    {"timestamp":1764518400000,"open":34.83,"high":35.52,"low":34.58,"close":35.14,"volume":448775},
+    {"timestamp":1764604800000,"open":34.81,"high":35.39,"low":34.46,"close":35.0,"volume":274294},
+    {"timestamp":1764691200000,"open":34.99,"high":35.79,"low":34.8,"close":35.17,"volume":360021},
+    {"timestamp":1764777600000,"open":35.17,"high":35.64,"low":34.85,"close":35.12,"volume":319415},
+    {"timestamp":1764864000000,"open":35.22,"high":36.09,"low":35.13,"close":35.74,"volume":397869},
+    {"timestamp":1765123200000,"open":36.23,"high":37.28,"low":35.66,"close":37.12,"volume":562615},
+    {"timestamp":1765209600000,"open":36.9,"high":37.45,"low":36.22,"close":36.73,"volume":480699},
+    {"timestamp":1765296000000,"open":36.93,"high":37.17,"low":36.03,"close":36.9,"volume":428139},
+    {"timestamp":1765382400000,"open":37.16,"high":37.24,"low":36.49,"close":36.8,"volume":361404},
+    {"timestamp":1765468800000,"open":37.11,"high":38.19,"low":36.52,"close":38.04,"volume":649300},
+    {"timestamp":1765728000000,"open":38.06,"high":39.73,"low":37.9,"close":38.91,"volume":462741},
+    {"timestamp":1765814400000,"open":39.35,"high":40.17,"low":38.51,"close":39.26,"volume":580832},
+    {"timestamp":1765900800000,"open":39.6,"high":42.22,"low":39.2,"close":41.59,"volume":759641},
+    {"timestamp":1765987200000,"open":41.16,"high":41.87,"low":39.97,"close":40.11,"volume":576109},
+    {"timestamp":1766073600000,"open":40.21,"high":40.65,"low":39.55,"close":40.0,"volume":429180},
+    {"timestamp":1766332800000,"open":40.26,"high":41.8,"low":39.9,"close":41.34,"volume":548273},
+    {"timestamp":1766419200000,"open":41.41,"high":44.14,"low":41.07,"close":42.99,"volume":676210},
+    {"timestamp":1766505600000,"open":43.0,"high":43.3,"low":40.0,"close":41.03,"volume":713150},
+    {"timestamp":1766592000000,"open":40.4,"high":40.75,"low":39.87,"close":40.22,"volume":452413},
+    {"timestamp":1766678400000,"open":40.22,"high":41.94,"low":40.2,"close":41.08,"volume":553468},
+    {"timestamp":1766937600000,"open":41.1,"high":41.9,"low":40.5,"close":40.56,"volume":461922},
+    {"timestamp":1767024000000,"open":39.56,"high":41.5,"low":39.36,"close":40.89,"volume":386129},
+    {"timestamp":1767110400000,"open":40.7,"high":41.88,"low":40.5,"close":41.06,"volume":380339},
+    {"timestamp":1767542400000,"open":41.99,"high":42.5,"low":41.02,"close":42.0,"volume":388187},
+    {"timestamp":1767628800000,"open":42.42,"high":43.48,"low":41.96,"close":43.32,"volume":490309},
+    {"timestamp":1767715200000,"open":43.72,"high":45.65,"low":43.32,"close":44.85,"volume":589676},
+    {"timestamp":1767801600000,"open":44.0,"high":45.0,"low":43.11,"close":43.81,"volume":437107},
+    {"timestamp":1767888000000,"open":43.61,"high":48.19,"low":43.61,"close":48.19,"volume":700250},
+    {"timestamp":1768147200000,"open":50.0,"high":50.3,"low":47.25,"close":49.02,"volume":746331},
+    {"timestamp":1768233600000,"open":48.79,"high":50.31,"low":48.01,"close":49.03,"volume":596922},
+    {"timestamp":1768320000000,"open":49.57,"high":51.5,"low":49.15,"close":50.48,"volume":675701},
+    {"timestamp":1768406400000,"open":50.2,"high":52.48,"low":49.98,"close":51.92,"volume":561653},
+    {"timestamp":1768492800000,"open":52.3,"high":55.85,"low":51.5,"close":53.84,"volume":703046},
+    {"timestamp":1768752000000,"open":53.85,"high":56.8,"low":52.45,"close":56.65,"volume":588739},
+    {"timestamp":1768838400000,"open":57.01,"high":57.08,"low":51.42,"close":54.06,"volume":794511},
+    {"timestamp":1768924800000,"open":54.36,"high":59.14,"low":53.9,"close":59.0,"volume":709615},
+    {"timestamp":1769011200000,"open":58.8,"high":59.98,"low":56.47,"close":58.0,"volume":648239},
+    {"timestamp":1769097600000,"open":58.2,"high":59.8,"low":56.1,"close":59.57,"volume":665000},
+    {"timestamp":1769356800000,"open":59.58,"high":65.52,"low":59.58,"close":65.51,"volume":707229},
+    {"timestamp":1769443200000,"open":64.0,"high":69.2,"low":62.33,"close":64.2,"volume":944878},
+    {"timestamp":1769529600000,"open":60.0,"high":66.96,"low":59.45,"close":64.94,"volume":1086797},
+    {"timestamp":1769616000000,"open":64.3,"high":65.48,"low":59.12,"close":60.01,"volume":1009728},
+    {"timestamp":1769702400000,"open":57.32,"high":58.98,"low":54.03,"close":56.55,"volume":968613},
+    {"timestamp":1769961600000,"open":53.73,"high":56.96,"low":53.66,"close":53.75,"volume":833364},
+    {"timestamp":1770048000000,"open":55.35,"high":56.4,"low":54.21,"close":56.18,"volume":715137},
+    {"timestamp":1770134400000,"open":57.8,"high":57.9,"low":55.37,"close":56.73,"volume":479435},
+    {"timestamp":1770220800000,"open":55.87,"high":57.16,"low":54.13,"close":55.16,"volume":458728},
+    {"timestamp":1770307200000,"open":53.94,"high":58.06,"low":53.81,"close":56.8,"volume":599846},
+    {"timestamp":1770566400000,"open":58.22,"high":58.35,"low":56.06,"close":56.32,"volume":539829},
+    {"timestamp":1770652800000,"open":56.96,"high":58.19,"low":56.06,"close":57.7,"volume":493683},
+    {"timestamp":1770739200000,"open":57.8,"high":62.96,"low":57.76,"close":62.05,"volume":840245},
+    {"timestamp":1770825600000,"open":61.89,"high":65.35,"low":60.78,"close":62.86,"volume":897967},
+    {"timestamp":1770912000000,"open":61.06,"high":61.92,"low":59.48,"close":59.5,"volume":627296},
+    {"timestamp":1771862400000,"open":62.01,"high":62.35,"low":59.31,"close":59.77,"volume":489946},
+    {"timestamp":1771948800000,"open":60.6,"high":65.29,"low":60.03,"close":64.13,"volume":840628},
+    {"timestamp":1772035200000,"open":64.86,"high":67.85,"low":63.71,"close":63.77,"volume":875863},
+    {"timestamp":1772121600000,"open":63.77,"high":70.15,"low":63.77,"close":70.15,"volume":871159},
+    {"timestamp":1772380800000,"open":74.0,"high":76.26,"low":70.91,"close":74.9,"volume":1025184},
+    {"timestamp":1772467200000,"open":74.03,"high":80.0,"low":73.99,"close":75.58,"volume":1162044},
+    {"timestamp":1772553600000,"open":70.1,"high":81.56,"low":70.02,"close":78.76,"volume":1176662},
+    {"timestamp":1772640000000,"open":80.96,"high":81.41,"low":74.0,"close":74.97,"volume":944565},
+    {"timestamp":1772726400000,"open":75.58,"high":78.26,"low":73.11,"close":74.0,"volume":871422},
+    {"timestamp":1772985600000,"open":72.0,"high":73.75,"low":68.88,"close":71.7,"volume":710362},
+    {"timestamp":1773072000000,"open":72.6,"high":73.78,"low":69.65,"close":72.18,"volume":530438},
+    {"timestamp":1773158400000,"open":72.99,"high":74.3,"low":68.35,"close":69.19,"volume":803963},
+    {"timestamp":1773244800000,"open":68.6,"high":69.98,"low":67.31,"close":68.13,"volume":513999},
+    {"timestamp":1773331200000,"open":66.13,"high":66.8,"low":62.22,"close":62.4,"volume":965269},
+    {"timestamp":1773590400000,"open":61.2,"high":61.87,"low":58.62,"close":60.4,"volume":660225},
+    {"timestamp":1773676800000,"open":60.51,"high":61.28,"low":59.1,"close":59.1,"volume":444780},
+    {"timestamp":1773763200000,"open":59.35,"high":60.44,"low":58.7,"close":59.72,"volume":366804},
+    {"timestamp":1773849600000,"open":58.5,"high":59.12,"low":55.2,"close":55.32,"volume":692497},
+    {"timestamp":1773936000000,"open":56.08,"high":56.5,"low":54.14,"close":54.32,"volume":538196},
+    {"timestamp":1774195200000,"open":53.09,"high":54.84,"low":51.55,"close":51.96,"volume":546632},
+    {"timestamp":1774281600000,"open":53.01,"high":55.74,"low":51.0,"close":55.71,"volume":747105},
+    {"timestamp":1774368000000,"open":58.14,"high":60.28,"low":56.02,"close":58.36,"volume":1165313},
+    {"timestamp":1774454400000,"open":60.99,"high":61.25,"low":56.5,"close":57.51,"volume":1060006},
+    {"timestamp":1774540800000,"open":55.8,"high":60.35,"low":55.8,"close":59.95,"volume":704574}
+];
+
+// 转换时间戳为日期字符串
+function formatStockData(data) {
+    return data.map(item => {
+        const date = new Date(item.timestamp);
+        return {
+            time: date.toISOString().split('T')[0],
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+            volume: item.volume
+        };
+    });
+}
+
+// 根据时间周期筛选数据
+function filterDataByTimeframe(data, timeframe) {
+    const now = new Date();
+    let days = 365; // 默认1年
+    
+    switch(timeframe) {
+        case '1M': days = 30; break;
+        case '3M': days = 90; break;
+        case '6M': days = 180; break;
+        default: days = 365;
+    }
+    
+    const cutoffDate = new Date(now);
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return data.filter(item => {
+        const itemDate = new Date(item.timestamp);
+        return itemDate >= cutoffDate;
+    });
+}
+
+// 初始化图表
+const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+    width: document.getElementById('chart').clientWidth,
+    height: document.getElementById('chart').clientHeight,
+    layout: {
+        background: { color: 'transparent' },
+        textColor: '#D9D9D9',
+    },
+    grid: {
+        vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+    },
+    crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal,
+    },
+    rightPriceScale: {
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    timeScale: {
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        timeVisible: true,
+        secondsVisible: false,
+    },
+});
+
+// 创建K线图系列
+const candleSeries = chart.addCandlestickSeries({
+    upColor: '#00ff88',
+    downColor: '#ff5555',
+    borderVisible: false,
+    wickUpColor: '#00ff88',
+    wickDownColor: '#ff5555',
+});
+
+// 创建折线图系列
+const lineSeries = chart.addLineSeries({
+    color: '#00d4ff',
+    lineWidth: 2,
+});
+
+// 创建面积图系列
+const areaSeries = chart.addAreaSeries({
+    topColor: 'rgba(0, 212, 255, 0.4)',
+    bottomColor: 'rgba(0, 212, 255, 0.05)',
+    lineColor: '#00d4ff',
+    lineWidth: 2,
+});
+
+// 创建成交量系列
+const volumeSeries = chart.addHistogramSeries({
+    color: 'rgba(0, 212, 255, 0.5)',
+    priceFormat: {
+        type: 'volume',
+    },
+    priceScaleId: '',
+});
+
+volumeSeries.priceScale().applyOptions({
+    scaleMargins: {
+        top: 0.8,
+        bottom: 0,
+    },
+});
+
+// 初始数据 - 使用真实数据
+const formattedData = formatStockData(realStockData);
+let currentData = formattedData;
+
+candleSeries.setData(currentData.map(d => ({
+    time: d.time,
+    open: d.open,
+    high: d.high,
+    low: d.low,
+    close: d.close,
+})));
+
+// 设置折线图数据（收盘价）
+lineSeries.setData(currentData.map(d => ({
+    time: d.time,
+    value: d.close,
+})));
+
+// 设置面积图数据（收盘价）
+areaSeries.setData(currentData.map(d => ({
+    time: d.time,
+    value: d.close,
+})));
+
+// 设置成交量数据
+volumeSeries.setData(currentData.map(d => ({
+    time: d.time,
+    value: d.volume,
+    color: d.close >= d.open ? 'rgba(0, 255, 136, 0.5)' : 'rgba(255, 85, 85, 0.5)',
+})));
+
+// 更新股票信息显示
+function updateStockInfo(latestData) {
+    if (!latestData) return;
+    
+    const date = new Date(latestData.time);
+    document.getElementById('latest-date').textContent = `日期: ${date.toLocaleDateString('zh-CN')}`;
+    document.getElementById('open').textContent = latestData.open.toFixed(2);
+    document.getElementById('close').textContent = latestData.close.toFixed(2);
+    document.getElementById('high').textContent = latestData.high.toFixed(2);
+    document.getElementById('low').textContent = latestData.low.toFixed(2);
+    
+    // 成交量转换为万手
+    const volumeInWan = (latestData.volume / 10000).toFixed(1);
+    document.getElementById('volume').textContent = `${volumeInWan}万手`;
+}
+
+// 初始更新
+updateStockInfo(currentData[currentData.length - 1]);
+
+// 当前显示的系列
+let activeSeries = candleSeries;
+candleSeries.applyOptions({ visible: true });
+lineSeries.applyOptions({ visible: false });
+areaSeries.applyOptions({ visible: false });
+volumeSeries.applyOptions({ visible: true });
+
+// 图表类型切换
+document.getElementById('candleBtn').addEventListener('click', () => {
+    setActiveButton('candleBtn');
+    candleSeries.applyOptions({ visible: true });
+    lineSeries.applyOptions({ visible: false });
+    areaSeries.applyOptions({ visible: false });
+    activeSeries = candleSeries;
+});
+
+document.getElementById('lineBtn').addEventListener('click', () => {
+    setActiveButton('lineBtn');
+    candleSeries.applyOptions({ visible: false });
+    lineSeries.applyOptions({ visible: true });
+    areaSeries.applyOptions({ visible: false });
+    activeSeries = lineSeries;
+});
+
+document.getElementById('areaBtn').addEventListener('click', () => {
+    setActiveButton('areaBtn');
+    candleSeries.applyOptions({ visible: false });
+    lineSeries.applyOptions({ visible: false });
+    areaSeries.applyOptions({ visible: true });
+    activeSeries = areaSeries;
+});
+
+document.getElementById('volumeBtn').addEventListener('click', function() {
+    const isVisible = volumeSeries.options().visible;
+    volumeSeries.applyOptions({ visible: !isVisible });
+    this.classList.toggle('active', !isVisible);
+});
+
+// 时间周期切换
+document.querySelectorAll('.timeframe-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const timeframe = this.dataset.timeframe;
+        let filteredData;
+        
+        if (timeframe === '1Y') {
+            // 显示所有数据（1年）
+            filteredData = formattedData;
+        } else {
+            // 根据时间周期筛选数据
+            filteredData = filterDataByTimeframe(realStockData, timeframe);
+            filteredData = formatStockData(filteredData);
+        }
+        
+        // 更新所有系列数据
+        candleSeries.setData(filteredData.map(d => ({
+            time: d.time,
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+        })));
+        
+        lineSeries.setData(filteredData.map(d => ({
+            time: d.time,
+            value: d.close,
+        })));
+        
+        areaSeries.setData(filteredData.map(d => ({
+            time: d.time,
+            value: d.close,
+        })));
+        
+        volumeSeries.setData(filteredData.map(d => ({
+            time: d.time,
+            value: d.volume,
+            color: d.close >= d.open ? 'rgba(0, 255, 136, 0.5)' : 'rgba(255, 85, 85, 0.5)',
+        })));
+        
+        currentData = filteredData;
+        updateStockInfo(currentData[currentData.length - 1]);
+        chart.timeScale().fitContent();
+    });
+});
+
+// 设置活动按钮
+function setActiveButton(buttonId) {
+    document.querySelectorAll('.controls button:not(.timeframe-btn)').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(buttonId).classList.add('active');
+}
+
+// 窗口大小调整时重新调整图表大小
+window.addEventListener('resize', () => {
+    chart.applyOptions({
+        width: document.getElementById('chart').clientWidth,
+        height: document.getElementById('chart').clientHeight
+    });
+});
+
+// 添加鼠标悬停效果
+chart.subscribeCrosshairMove(param => {
+    if (param.time) {
+        const data = param.seriesData.get(activeSeries);
+        if (data) {
+            updateStockInfo(data);
+        }
+    }
+});
+
+// 初始化完成
+console.log('厦门钨业(600549) K线图已初始化完成！');
+console.log('使用真实股票数据，数据点数量：', currentData.length);
+chart.timeScale().fitContent();
+</script>
+</body>
+</html>
